@@ -30,9 +30,16 @@ class Pilha:
     # Se a pilha estiver vazia, retorna None
     # ------------------------------------------------------------------
     def pop(self) -> Optional[Carta]:
-        if self.cartas:  # Se houver cartas
-            return self.cartas.pop()  # Remove e retorna a última
-        return None  # Pilha vazia
+        if not self.cartas:  # Se vazia
+            return None
+        
+        carta_removida = self.cartas.pop()
+        
+        # Regra do Yukon: se ainda houver cartas, vira a do topo
+        if self.cartas:
+            self.cartas[-1].virar()  # Vira para cima
+        
+        return carta_removida
 
     # ------------------------------------------------------------------
     # MÉTODO: peek
