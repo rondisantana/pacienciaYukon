@@ -1,5 +1,6 @@
 # src/gui/interface_pygame.py
-# JANELA NORMAL + F11 + ESC + DUPLO CLIQUE + DESFAZER + CRONÔMETRO + SEM ERROS
+# PACIÊNCIA YUKON — ESTRUTURA DE DADOS II
+# Silvia Brandão 2025
 
 import pygame
 import sys
@@ -18,7 +19,8 @@ VERDE_MESA = (0, 100, 0)
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
 VERMELHO = (220, 20, 60)
-DESTAQUE = (255, 255, 0, 80)
+DESTAQUE_DICA = (255, 255, 100, 130)
+HOVER_BOTAO = (0, 180, 0)
 
 # Cartas
 LARGURA_CARTA = 80
@@ -38,19 +40,32 @@ TITULO_Y = PAINEL_Y + 20
 
 # Botões
 BOTAO_X = PAINEL_X + 20
-BOTAO_Y = TITULO_Y + 80
+BOTAO_Y = TITULO_Y + 70
 BOTAO_LARGURA = 140
 BOTAO_ALTURA = 40
+ESPACO_BOTOES = 15
 
+# DICA
+BOTAO_DICA_X = BOTAO_X
+BOTAO_DICA_Y = BOTAO_Y
+
+# NOVO JOGO
+BOTAO_NOVO_X = BOTAO_X
+BOTAO_NOVO_Y = BOTAO_DICA_Y + BOTAO_ALTURA + ESPACO_BOTOES
+
+# DESFAZER
 BOTAO_DESFAZER_X = BOTAO_X
-BOTAO_DESFAZER_Y = BOTAO_Y + BOTAO_ALTURA + 15
-BOTAO_DESFAZER_LARGURA = 140
-BOTAO_DESFAZER_ALTURA = 40
+BOTAO_DESFAZER_Y = BOTAO_NOVO_Y + BOTAO_ALTURA + ESPACO_BOTOES
 
 # Fundações
 FUNDAÇÃO_X = PAINEL_X + 50
-FUNDAÇÃO_Y_INICIAL = BOTAO_DESFAZER_Y + BOTAO_DESFAZER_ALTURA + 30
-FUNDAÇÃO_ESPACO_VERTICAL = 130
+FUNDAÇÃO_Y_INICIAL = BOTAO_DESFAZER_Y + BOTAO_ALTURA + 50
+FUNDAÇÃO_ESPACO_VERTICAL = 120
+
+# CRONÔMETRO — CANTO INFERIOR DIREITO
+CRONOMETRO_LARGURA = 140
+CRONOMETRO_ALTURA = 50
+CRONOMETRO_MARGEM = 20
 
 # Tableau
 TABLEAU_X_INICIAL = PAINEL_X + PAINEL_LARGURA + 20
@@ -62,14 +77,11 @@ TABLEAU_Y = 20
 class InterfacePygame:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption("Paciência Yukon - Silvia Brandão 2025.2")
+        pygame.display.set_caption("Paciência Yukon")
 
-        # === CONTROLE DE TELA ===
         self.tela_cheia = False
         self.largura_padrao = LARGURA_TELA_PADRAO
         self.altura_padrao = ALTURA_TELA_PADRAO
-
-        # ABRIR EM JANELA NORMAL
         self.tela = pygame.display.set_mode((self.largura_padrao, self.altura_padrao), pygame.RESIZABLE)
 
         self.clock = pygame.time.Clock()
@@ -90,40 +102,36 @@ class InterfacePygame:
         self.origem_tipo = None
 
         self.historico = [self.jogo.salvar_estado()]
-        self.botao_desfazer_clicado = False
-
         self.ultimo_desfazer = 0
         self.DEBOUNCE_TEMPO = 300
 
-        # === DUPLO CLIQUE ===
         self.ultimo_clique_tempo = 0
         self.ultimo_clique_pos = (0, 0)
         self.DUPLO_CLIQUE_TEMPO = 300
         self.DUPLO_CLIQUE_DISTANCIA = 10
 
-        # === CRONÔMETRO ===
         self.tempo_inicio = None
         self.tempo_total_ms = 0
         self.cronometro_ativo = False
+        self.primeiro_clique_feito = False
 
-    # ------------------------------------------------------------------
+        self.dica_ativa = False
+        self.cartas_destacadas = []
+
     def alternar_tela_cheia(self, forcar=None):
         if forcar is not None:
             self.tela_cheia = forcar
         else:
             self.tela_cheia = not self.tela_cheia
-
         if self.tela_cheia:
             self.tela = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
             self.tela = pygame.display.set_mode((self.largura_padrao, self.altura_padrao), pygame.RESIZABLE)
 
-    # ------------------------------------------------------------------
     def carregar_imagens(self):
         imagens = {}
         raiz_projeto = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         pasta_cartas = os.path.join(raiz_projeto, "cartas")
-        
         if not os.path.exists(pasta_cartas):
             return imagens
 
@@ -149,8 +157,7 @@ class InterfacePygame:
 
         return imagens
 
-    # ------------------------------------------------------------------
-    def desenhar_carta(self, carta, x, y, face_up=True, destaque=False):
+    def desenhar_carta(self, carta, x, y, face_up=True, destaque_dica=False):
         if face_up and carta:
             chave = str(carta)
             img = self.imagens_cartas.get(chave)
@@ -164,63 +171,68 @@ class InterfacePygame:
                 self.tela.blit(verso, (x, y))
             else:
                 self.desenhar_fallback_verso(x, y)
-
-        if destaque:
+        if destaque_dica:
             s = pygame.Surface((LARGURA_CARTA, ALTURA_CARTA), pygame.SRCALPHA)
-            s.fill(DESTAQUE)
+            s.fill(DESTAQUE_DICA)
             self.tela.blit(s, (x, y))
 
-    # ------------------------------------------------------------------
     def desenhar_fundo(self):
         self.tela.fill(VERDE_MESA)
         largura_atual, altura_atual = self.tela.get_size()
-        painel_altura = altura_atual - 40
-        painel_rect = pygame.Rect(20, 20, PAINEL_LARGURA, painel_altura)
+
+        # Calcula altura do painel com margem inferior
+        ultima_fundacao_y = FUNDAÇÃO_Y_INICIAL + 3 * FUNDAÇÃO_ESPACO_VERTICAL
+        painel_altura = ultima_fundacao_y + ALTURA_CARTA + 100
+
+        # Garante que o painel não ultrapasse a tela
+        painel_altura = min(painel_altura, altura_atual - 25)
+
+        painel_rect = pygame.Rect(PAINEL_X, PAINEL_Y, PAINEL_LARGURA, painel_altura)
         pygame.draw.rect(self.tela, PAINEL_COR, painel_rect)
         pygame.draw.rect(self.tela, PAINEL_BORDA, painel_rect, 4)
 
-    # ------------------------------------------------------------------
+    def desenhar_botao(self, texto, x, y, largura, altura, hover=False):
+        cor_fundo = HOVER_BOTAO if hover else (0, 100, 0)
+        pygame.draw.rect(self.tela, cor_fundo, (x, y, largura, altura), border_radius=10)
+        pygame.draw.rect(self.tela, BRANCO, (x, y, largura, altura), 3, border_radius=10)
+        txt = self.fonte_pequena.render(texto, True, BRANCO)
+        txt_rect = txt.get_rect(center=(x + largura//2, y + altura//2))
+        self.tela.blit(txt, txt_rect)
+
+    def desenhar_botao_dica(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        dentro = (BOTAO_DICA_X <= mouse_x <= BOTAO_DICA_X + BOTAO_LARGURA and
+                  BOTAO_DICA_Y <= mouse_y <= BOTAO_DICA_Y + BOTAO_ALTURA)
+        cor_texto = (255, 255, 0) if self.dica_ativa else BRANCO
+        self.desenhar_botao("DICA", BOTAO_DICA_X, BOTAO_DICA_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
+
     def desenhar_botao_novo_jogo(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        dentro = (BOTAO_X <= mouse_x <= BOTAO_X + BOTAO_LARGURA and
-                  BOTAO_Y <= mouse_y <= BOTAO_Y + BOTAO_ALTURA)
-        cor_fundo = (0, 140, 0) if dentro else (0, 100, 0)
-        pygame.draw.rect(self.tela, cor_fundo, (BOTAO_X, BOTAO_Y, BOTAO_LARGURA, BOTAO_ALTURA), border_radius=10)
-        pygame.draw.rect(self.tela, BRANCO, (BOTAO_X, BOTAO_Y, BOTAO_LARGURA, BOTAO_ALTURA), 3, border_radius=10)
+        dentro = (BOTAO_NOVO_X <= mouse_x <= BOTAO_NOVO_X + BOTAO_LARGURA and
+                  BOTAO_NOVO_Y <= mouse_y <= BOTAO_NOVO_Y + BOTAO_ALTURA)
+        self.desenhar_botao("NOVO JOGO", BOTAO_NOVO_X, BOTAO_NOVO_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
 
-        texto = self.fonte_pequena.render("NOVO JOGO", True, BRANCO)
-        texto_rect = texto.get_rect(center=(BOTAO_X + BOTAO_LARGURA//2, BOTAO_Y + BOTAO_ALTURA//2))
-        self.tela.blit(texto, texto_rect)
-
-    # ------------------------------------------------------------------
     def desenhar_botao_desfazer(self):
         if len(self.historico) <= 1:
             return
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        dentro = (BOTAO_DESFAZER_X <= mouse_x <= BOTAO_DESFAZER_X + BOTAO_DESFAZER_LARGURA and
-                  BOTAO_DESFAZER_Y <= mouse_y <= BOTAO_DESFAZER_Y + BOTAO_DESFAZER_ALTURA)
-        cor_fundo = (0, 140, 0) if dentro else (0, 100, 0)
-        pygame.draw.rect(self.tela, cor_fundo, (BOTAO_DESFAZER_X, BOTAO_DESFAZER_Y, BOTAO_DESFAZER_LARGURA, BOTAO_DESFAZER_ALTURA), border_radius=10)
-        pygame.draw.rect(self.tela, BRANCO, (BOTAO_DESFAZER_X, BOTAO_DESFAZER_Y, BOTAO_DESFAZER_LARGURA, BOTAO_DESFAZER_ALTURA), 3, border_radius=10)
+        dentro = (BOTAO_DESFAZER_X <= mouse_x <= BOTAO_DESFAZER_X + BOTAO_LARGURA and
+                  BOTAO_DESFAZER_Y <= mouse_y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA)
+        self.desenhar_botao("DESFAZER", BOTAO_DESFAZER_X, BOTAO_DESFAZER_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
 
-        texto = self.fonte_pequena.render("DESFAZER", True, BRANCO)
-        texto_rect = texto.get_rect(center=(BOTAO_DESFAZER_X + BOTAO_DESFAZER_LARGURA//2, BOTAO_DESFAZER_Y + BOTAO_DESFAZER_ALTURA//2))
-        self.tela.blit(texto, texto_rect)
-
-    # ------------------------------------------------------------------
     def desfazer_ultima_jogada(self):
         if len(self.historico) > 1:
             self.historico.pop()
             self.jogo.restaurar_estado(self.historico[-1])
+            self.dica_ativa = False
+            self.cartas_destacadas = []
 
-    # ------------------------------------------------------------------
     def desenhar_titulo(self):
         pac = self.fonte.render("PACIÊNCIA", True, BRANCO)
         yuk = self.fonte.render("YUKON", True, BRANCO)
         self.tela.blit(pac, (TITULO_X, TITULO_Y))
         self.tela.blit(yuk, (TITULO_X, TITULO_Y + 30))
 
-    # ------------------------------------------------------------------
     def desenhar_tableau(self):
         largura_tela, _ = self.tela.get_size()
         espaco_disponivel = largura_tela - TABLEAU_X_INICIAL - 50
@@ -230,54 +242,47 @@ class InterfacePygame:
             x = TABLEAU_X_INICIAL + col_idx * espaco_horizontal
             for i, carta in enumerate(pilha.cartas):
                 y = TABLEAU_Y + i * SOBREPOSICAO
-                destaque = (self.arrastando and 
-                           self.origem_coluna == col_idx and 
-                           self.origem_tipo == "tableau" and
-                           i >= self.origem_indice)
-                self.desenhar_carta(carta, x, y, carta.face_up, destaque)
+                destaque_arrasto = (self.arrastando and self.origem_coluna == col_idx and
+                                  self.origem_tipo == "tableau" and i >= self.origem_indice)
+                destaque_dica = False
 
-    # ------------------------------------------------------------------
+                if self.dica_ativa:
+                    for o, inicio, tam in self.cartas_destacadas:
+                        if o == col_idx and inicio <= i < inicio + tam:
+                            destaque_dica = True
+                            break
+
+                self.desenhar_carta(carta, x, y, carta.face_up, destaque_dica or destaque_arrasto)
+
     def desenhar_fundacoes_vertical(self):
-        simbolos = ["spades", "hearts", "diamonds", "clubs"]
         for i, fund in enumerate(self.jogo.fundacoes):
             x = FUNDAÇÃO_X
             y = FUNDAÇÃO_Y_INICIAL + i * FUNDAÇÃO_ESPACO_VERTICAL
             rect = pygame.Rect(x, y, LARGURA_CARTA, ALTURA_CARTA)
             pygame.draw.rect(self.tela, (0, 60, 0), rect, border_radius=12)
             pygame.draw.rect(self.tela, BRANCO, rect, 3, border_radius=12)
-
             if fund.is_vazia():
-                texto = self.fonte_pequena.render(simbolos[i], True, (200, 200, 200))
-                texto_rect = texto.get_rect(center=rect.center)
-                self.tela.blit(texto, texto_rect)
+                # Fonte pequena para caber
+                fonte = pygame.font.SysFont("Segoe UI Symbol", 16)
+                cor = (200, 200, 200)
+                
+                # Linha superior: ♠ ♥
+                linha1 = fonte.render("♠  ♥", True, cor)
+                linha1_rect = linha1.get_rect(centerx=rect.centerx, y=y + 30)
+                self.tela.blit(linha1, linha1_rect)
+                
+                # Linha inferior: ♦ ♣
+                linha2 = fonte.render("♦  ♣", True, cor)
+                linha2_rect = linha2.get_rect(centerx=rect.centerx, y=y + 55)
+                self.tela.blit(linha2, linha2_rect)
             else:
-                self.desenhar_carta(fund.peek(), x, y, True)
+                destaque = self.dica_ativa and any(o == -1 and inc == i for o, inc, _ in self.cartas_destacadas)
+                self.desenhar_carta(fund.peek(), x, y, True, destaque)
 
-    # ------------------------------------------------------------------
-    def desenhar_subpilha_arrastada(self, mouse_x, mouse_y):
-        if not self.arrastando or not self.subpilha_arrastada:
-            return
-        x = mouse_x - self.offset_x
-        y = mouse_y - self.offset_y
-        for i, carta in enumerate(self.subpilha_arrastada):
-            self.desenhar_carta(carta, x, y + i * SOBREPOSICAO, True, True)
-
-    # ------------------------------------------------------------------
-    def desenhar_vitoria(self):
-        if self.jogo.verificar_vitoria():
-            vitoria = self.fonte_vitoria.render("VITÓRIA!", True, (255, 215, 0))
-            fundo = pygame.Surface((400, 100), pygame.SRCALPHA)
-            fundo.fill((0, 0, 0, 180))
-            largura_tela, altura_tela = self.tela.get_size()
-            self.tela.blit(fundo, (largura_tela//2 - 200, altura_tela//2 - 50))
-            self.tela.blit(vitoria, (largura_tela//2 - 120, altura_tela//2 - 40))
-
-    # ------------------------------------------------------------------
     def coordenadas_para_coluna(self, x, y):
         largura_tela, _ = self.tela.get_size()
         espaco_disponivel = largura_tela - TABLEAU_X_INICIAL - 50
         espaco_horizontal = espaco_disponivel // 7
-
         for i in range(4):
             fx = FUNDAÇÃO_X
             fy = FUNDAÇÃO_Y_INICIAL + i * FUNDAÇÃO_ESPACO_VERTICAL
@@ -289,43 +294,73 @@ class InterfacePygame:
                 return ("tableau", col)
         return (None, None)
 
-    # ------------------------------------------------------------------
     def encontrar_subpilha_clicada(self, mx, my):
         largura_tela, _ = self.tela.get_size()
         espaco_disponivel = largura_tela - TABLEAU_X_INICIAL - 50
         espaco_horizontal = espaco_disponivel // 7
-
-        for i, pilha in enumerate(self.jogo.tableau):
-            x = TABLEAU_X_INICIAL + i * espaco_horizontal
+        for col_idx, pilha in enumerate(self.jogo.tableau):
+            x = TABLEAU_X_INICIAL + col_idx * espaco_horizontal
             if x <= mx < x + LARGURA_CARTA:
                 y_inicial = TABLEAU_Y
                 for idx, carta in enumerate(pilha.cartas):
                     y_topo = y_inicial + idx * SOBREPOSICAO
                     y_limite = y_topo + ALTURA_CARTA if idx == len(pilha.cartas) - 1 else y_inicial + (idx + 1) * SOBREPOSICAO
                     if y_topo <= my < y_limite and carta.face_up:
-                        return i, idx
+                        return col_idx, idx
         return None
 
-    # ------------------------------------------------------------------
-    def tentar_mover_duplo_clique(self, mx, my):
-        resultado = self.encontrar_subpilha_clicada(mx, my)
-        if resultado is None:
-            return
-        col, idx = resultado
-        pilha = self.jogo.tableau[col]
-        if idx != len(pilha.cartas) - 1:
-            return
-        carta = pilha.cartas[-1]
-        if not carta.face_up:
-            return
+    def calcular_dicas_completas(self):
+        self.cartas_destacadas = []
 
-        for fund_idx, fund in enumerate(self.jogo.fundacoes):
-            if self.jogo.pode_mover_para_fundacao(carta, fund_idx):
-                if self.jogo.mover_para_fundacao(col, fund_idx):
-                    self.historico.append(self.jogo.salvar_estado())
-                    return
+        # TABLEAU → TABLEAU
+        for origem in range(7):
+            pilha = self.jogo.tableau[origem]
+            if not pilha.cartas:
+                continue
 
-    # ------------------------------------------------------------------
+            for inicio in range(len(pilha.cartas)):
+                if not pilha.cartas[inicio].face_up:
+                    continue
+
+                subpilha = [pilha.cartas[inicio]]
+                for i in range(inicio + 1, len(pilha.cartas)):
+                    proxima = pilha.cartas[i]
+                    anterior = subpilha[-1]
+                    if (proxima.valor == anterior.valor - 1 and
+                        proxima.is_vermelho() != anterior.is_vermelho()):
+                        subpilha.append(proxima)
+                    else:
+                        break
+
+                if len(subpilha) >= 1:
+                    for destino in range(7):
+                        if origem == destino:
+                            continue
+                        if self.jogo.tableau[destino].pode_adicionar_subpilha(subpilha):
+                            self.cartas_destacadas.append((origem, inicio, len(subpilha)))
+                            break
+
+        # TABLEAU → FUNDAÇÃO
+        for col in range(7):
+            pilha = self.jogo.tableau[col]
+            if pilha.cartas and pilha.cartas[-1].face_up:
+                carta = pilha.cartas[-1]
+                for fund_idx in range(4):
+                    if self.jogo.pode_mover_para_fundacao(carta, fund_idx):
+                        self.cartas_destacadas.append((col, len(pilha.cartas)-1, 1))
+                        break
+
+        # FUNDAÇÃO → TABLEAU
+        for fund_idx in range(4):
+            fund = self.jogo.fundacoes[fund_idx]
+            if fund.is_vazia():
+                continue
+            carta = fund.peek()
+            for col in range(7):
+                if self.jogo.tableau[col].pode_adicionar_subpilha([carta]):
+                    self.cartas_destacadas.append((-1, fund_idx, 1))
+                    break
+
     def tratar_eventos(self):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -342,84 +377,96 @@ class InterfacePygame:
                 x, y = evento.pos
                 agora = pygame.time.get_ticks()
 
-                # === DETECTAR DUPLO CLIQUE ===
+                # DICA
+                if (BOTAO_DICA_X <= x <= BOTAO_DICA_X + BOTAO_LARGURA and
+                    BOTAO_DICA_Y <= y <= BOTAO_DICA_Y + BOTAO_ALTURA):
+                    self.dica_ativa = not self.dica_ativa
+                    if self.dica_ativa:
+                        self.calcular_dicas_completas()
+                    else:
+                        self.cartas_destacadas = []
+                    continue
+
+                # NOVO JOGO
+                if (BOTAO_NOVO_X <= x <= BOTAO_NOVO_X + BOTAO_LARGURA and
+                    BOTAO_NOVO_Y <= y <= BOTAO_NOVO_Y + BOTAO_ALTURA):
+                    self.jogo = JogoYukon()
+                    self.historico = [self.jogo.salvar_estado()]
+                    self.dica_ativa = False
+                    self.cartas_destacadas = []
+                    self.primeiro_clique_feito = False
+                    self.cronometro_ativo = False
+                    self.tempo_total_ms = 0
+                    continue
+
+                # DESFAZER
+                if (len(self.historico) > 1 and
+                    BOTAO_DESFAZER_X <= x <= BOTAO_DESFAZER_X + BOTAO_LARGURA and
+                    BOTAO_DESFAZER_Y <= y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA and
+                    agora - self.ultimo_desfazer > self.DEBOUNCE_TEMPO):
+                    self.desfazer_ultima_jogada()
+                    self.ultimo_desfazer = agora
+                    continue
+
+                # DUPLO CLIQUE
                 tempo_desde_ultimo = agora - self.ultimo_clique_tempo
                 dist_x = abs(x - self.ultimo_clique_pos[0])
                 dist_y = abs(y - self.ultimo_clique_pos[1])
-
                 if (tempo_desde_ultimo < self.DUPLO_CLIQUE_TEMPO and
                     dist_x < self.DUPLO_CLIQUE_DISTANCIA and
                     dist_y < self.DUPLO_CLIQUE_DISTANCIA):
-                    
                     self.tentar_mover_duplo_clique(x, y)
                     self.ultimo_clique_tempo = 0
                     continue
-
-                # Atualizar último clique
                 self.ultimo_clique_tempo = agora
                 self.ultimo_clique_pos = (x, y)
 
-                # === CLIQUE ÚNICO ===
-                if (BOTAO_X <= x <= BOTAO_X + BOTAO_LARGURA and
-                    BOTAO_Y <= y <= BOTAO_Y + BOTAO_ALTURA):
-                    # === REINICIAR CRONÔMETRO AO CRIAR NOVO JOGO ===
-                    self.tempo_inicio = pygame.time.get_ticks()
-                    self.tempo_total_ms = 0
-                    self.cronometro_ativo = True
+                if not self.primeiro_clique_feito:
+                    self.iniciar_cronometro()
 
-                    self.jogo = JogoYukon()
-                    self.historico = [self.jogo.salvar_estado()]
-                    self.arrastando = False
-                    self.subpilha_arrastada = []
-
-                elif (BOTAO_DESFAZER_X <= x <= BOTAO_DESFAZER_X + BOTAO_DESFAZER_LARGURA and
-                      BOTAO_DESFAZER_Y <= y <= BOTAO_DESFAZER_Y + BOTAO_DESFAZER_ALTURA and
-                      len(self.historico) > 1 and
-                      agora - self.ultimo_desfazer > self.DEBOUNCE_TEMPO):
-                    self.botao_desfazer_clicado = True
-                    self.ultimo_desfazer = agora
-
+                resultado = self.encontrar_subpilha_clicada(x, y)
+                if resultado is not None:
+                    col, idx = resultado
+                    pilha = self.jogo.tableau[col]
+                    subpilha = [pilha.cartas[idx]]
+                    for i in range(idx + 1, len(pilha.cartas)):
+                        proxima = pilha.cartas[i]
+                        anterior = subpilha[-1]
+                        if (proxima.valor == anterior.valor - 1 and
+                            proxima.is_vermelho() != anterior.is_vermelho()):
+                            subpilha.append(proxima)
+                        else:
+                            break
+                    self.subpilha_arrastada = subpilha
+                    self.origem_coluna = col
+                    self.origem_indice = idx
+                    self.origem_tipo = "tableau"
+                    largura_tela, _ = self.tela.get_size()
+                    espaco_disponivel = largura_tela - TABLEAU_X_INICIAL - 50
+                    espaco_horizontal = espaco_disponivel // 7
+                    self.offset_x = x - (TABLEAU_X_INICIAL + col * espaco_horizontal)
+                    self.offset_y = y - (TABLEAU_Y + idx * SOBREPOSICAO)
+                    self.arrastando = True
                 else:
-                    resultado = self.encontrar_subpilha_clicada(x, y)
-                    if resultado is not None:
-                        col, idx = resultado
-                        pilha = self.jogo.tableau[col]
-                        self.subpilha_arrastada = pilha.get_subpilha(idx)
-                        self.origem_coluna = col
-                        self.origem_indice = idx
-                        self.origem_tipo = "tableau"
-                        largura_tela, _ = self.tela.get_size()
-                        espaco_disponivel = largura_tela - TABLEAU_X_INICIAL - 50
-                        espaco_horizontal = espaco_disponivel // 7
-                        self.offset_x = x - (TABLEAU_X_INICIAL + col * espaco_horizontal)
-                        self.offset_y = y - (TABLEAU_Y + idx * SOBREPOSICAO)
-                        self.arrastando = True
-                    else:
-                        tipo, idx = self.coordenadas_para_coluna(x, y)
-                        if tipo == "fundacao":
-                            fund = self.jogo.fundacoes[idx]
-                            if not fund.is_vazia():
-                                carta = fund.peek()
-                                self.subpilha_arrastada = [carta]
-                                self.origem_coluna = idx
-                                self.origem_indice = 0
-                                self.origem_tipo = "fundacao"
-                                fund_y = FUNDAÇÃO_Y_INICIAL + idx * FUNDAÇÃO_ESPACO_VERTICAL
-                                self.offset_x = x - FUNDAÇÃO_X
-                                self.offset_y = y - fund_y
-                                self.arrastando = True
+                    tipo, idx = self.coordenadas_para_coluna(x, y)
+                    if tipo == "fundacao":
+                        fund = self.jogo.fundacoes[idx]
+                        if not fund.is_vazia():
+                            carta = fund.peek()
+                            self.subpilha_arrastada = [carta]
+                            self.origem_coluna = idx
+                            self.origem_indice = 0
+                            self.origem_tipo = "fundacao"
+                            fund_y = FUNDAÇÃO_Y_INICIAL + idx * FUNDAÇÃO_ESPACO_VERTICAL
+                            self.offset_x = x - FUNDAÇÃO_X
+                            self.offset_y = y - fund_y
+                            self.arrastando = True
 
             elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
-                if self.botao_desfazer_clicado:
-                    self.desfazer_ultima_jogada()
-                    self.botao_desfazer_clicado = False
-
-                elif self.arrastando:
+                if self.arrastando:
                     x, y = evento.pos
                     tipo_destino, idx_destino = self.coordenadas_para_coluna(x, y)
-
                     movimento_valido = False
-
                     if (tipo_destino == "tableau" and self.origem_tipo == "tableau" and idx_destino != self.origem_coluna):
                         if self.jogo.mover_subpilha(self.origem_coluna, self.origem_indice, idx_destino):
                             movimento_valido = True
@@ -429,67 +476,85 @@ class InterfacePygame:
                     elif (tipo_destino == "tableau" and self.origem_tipo == "fundacao"):
                         if self.jogo.mover_da_fundacao(self.origem_coluna, idx_destino):
                             movimento_valido = True
-
                     if movimento_valido:
                         self.historico.append(self.jogo.salvar_estado())
-
+                        if self.dica_ativa:
+                            self.calcular_dicas_completas()
                     self.arrastando = False
                     self.subpilha_arrastada = []
                     self.origem_coluna = None
                     self.origem_indice = None
                     self.origem_tipo = None
 
-    # ------------------------------------------------------------------
+    def iniciar_cronometro(self):
+        if not self.primeiro_clique_feito:
+            self.tempo_inicio = pygame.time.get_ticks()
+            self.cronometro_ativo = True
+            self.primeiro_clique_feito = True
+
+    def tentar_mover_duplo_clique(self, mx, my):
+        resultado = self.encontrar_subpilha_clicada(mx, my)
+        if resultado is None:
+            return
+        col, idx = resultado
+        pilha = self.jogo.tableau[col]
+        if idx != len(pilha.cartas) - 1:
+            return
+        carta = pilha.cartas[-1]
+        if not carta.face_up:
+            return
+        for fund_idx in range(4):
+            if self.jogo.pode_mover_para_fundacao(carta, fund_idx):
+                if self.jogo.mover_para_fundacao(col, fund_idx):
+                    self.historico.append(self.jogo.salvar_estado())
+                    if self.dica_ativa:
+                        self.calcular_dicas_completas()
+                    return
+
     def formatar_tempo(self, ms):
-        """Formata milissegundos em MM:SS"""
         minutos = ms // 60000
         segundos = (ms % 60000) // 1000
         return f"{minutos:02d}:{segundos:02d}"
 
-    # ------------------------------------------------------------------
     def desenhar_cronometro(self):
-        """Desenha apenas o tempo (MM:SS) abaixo das fundações"""
-        ultima_fund_y = FUNDAÇÃO_Y_INICIAL + 3 * FUNDAÇÃO_ESPACO_VERTICAL
-        y_cronometro = ultima_fund_y + ALTURA_CARTA + 20
-        x_cronometro = FUNDAÇÃO_X
+        largura, altura = self.tela.get_size()
+        x = largura - CRONOMETRO_LARGURA - CRONOMETRO_MARGEM
+        y = altura - CRONOMETRO_ALTURA - CRONOMETRO_MARGEM
 
-        if self.cronometro_ativo:
-            tempo_atual = self.tempo_total_ms + (pygame.time.get_ticks() - self.tempo_inicio)
-        else:
-            tempo_atual = self.tempo_total_ms
+        tempo_atual = self.tempo_total_ms
+        if self.cronometro_ativo and self.tempo_inicio is not None:
+            tempo_atual += (pygame.time.get_ticks() - self.tempo_inicio)
 
-        texto_crono = self.fonte.render(self.formatar_tempo(tempo_atual), True, (255, 255, 255))
-        texto_rect = texto_crono.get_rect(center=(x_cronometro + LARGURA_CARTA // 2, y_cronometro))
+        texto = self.fonte.render(self.formatar_tempo(tempo_atual), True, BRANCO)
+        texto_rect = texto.get_rect(center=(x + CRONOMETRO_LARGURA // 2, y + CRONOMETRO_ALTURA // 2))
 
-        fundo = pygame.Surface((LARGURA_CARTA + 20, 40), pygame.SRCALPHA)
-        fundo.fill((0, 80, 0, 200))
-        self.tela.blit(fundo, (x_cronometro - 10, y_cronometro - 15))
-        self.tela.blit(texto_crono, texto_rect)
+        fundo = pygame.Surface((CRONOMETRO_LARGURA, CRONOMETRO_ALTURA), pygame.SRCALPHA)
+        fundo.fill((0, 80, 0, 240))
+        self.tela.blit(fundo, (x, y))
+        pygame.draw.rect(self.tela, BRANCO, (x, y, CRONOMETRO_LARGURA, CRONOMETRO_ALTURA), 3, border_radius=10)
+        self.tela.blit(texto, texto_rect)
 
-    # ------------------------------------------------------------------
     def rodar(self):
         while True:
             self.tratar_eventos()
 
-            # === AJUSTAR REDIMENSIONAMENTO DA JANELA ===
             largura_atual, altura_atual = self.tela.get_size()
             if not self.tela_cheia and (largura_atual != self.largura_padrao or altura_atual != self.altura_padrao):
                 self.largura_padrao = largura_atual
                 self.altura_padrao = altura_atual
 
-            # === PARAR CRONÔMETRO NA VITÓRIA ===
             if self.jogo.verificar_vitoria() and self.cronometro_ativo:
                 self.tempo_total_ms += pygame.time.get_ticks() - self.tempo_inicio
                 self.cronometro_ativo = False
 
-            # === DESENHAR TUDO ===
             self.desenhar_fundo()
             self.desenhar_titulo()
+            self.desenhar_botao_dica()
             self.desenhar_botao_novo_jogo()
             self.desenhar_botao_desfazer()
-            self.desenhar_cronometro()
             self.desenhar_fundacoes_vertical()
             self.desenhar_tableau()
+            self.desenhar_cronometro()  # SEMPRE VISÍVEL
             self.desenhar_vitoria()
 
             if self.arrastando:
@@ -499,7 +564,23 @@ class InterfacePygame:
             pygame.display.flip()
             self.clock.tick(FPS)
 
-    # ------------------------------------------------------------------
+    def desenhar_subpilha_arrastada(self, mouse_x, mouse_y):
+        if not self.arrastando or not self.subpilha_arrastada:
+            return
+        x = mouse_x - self.offset_x
+        y = mouse_y - self.offset_y
+        for i, carta in enumerate(self.subpilha_arrastada):
+            self.desenhar_carta(carta, x, y + i * SOBREPOSICAO, True, True)
+
+    def desenhar_vitoria(self):
+        if self.jogo.verificar_vitoria():
+            vitoria = self.fonte_vitoria.render("VITÓRIA!", True, (255, 215, 0))
+            fundo = pygame.Surface((400, 100), pygame.SRCALPHA)
+            fundo.fill((0, 0, 0, 180))
+            largura_tela, altura_tela = self.tela.get_size()
+            self.tela.blit(fundo, (largura_tela//2 - 200, altura_tela//2 - 50))
+            self.tela.blit(vitoria, (largura_tela//2 - 120, altura_tela//2 - 40))
+
     def desenhar_fallback(self, carta, x, y):
         pygame.draw.rect(self.tela, BRANCO, (x, y, LARGURA_CARTA, ALTURA_CARTA))
         pygame.draw.rect(self.tela, PRETO, (x, y, LARGURA_CARTA, ALTURA_CARTA), 2)
