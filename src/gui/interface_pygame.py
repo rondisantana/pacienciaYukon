@@ -11,42 +11,41 @@ from src.game.jogo_yukon import JogoYukon
 # ===================================================================
 # CONFIGURAÇÕES GLOBAIS DO JOGO
 # ===================================================================
-LARGURA_TELA_PADRAO = 1200          # Largura padrão da janela
-ALTURA_TELA_PADRAO = 800            # Altura padrão da janela
-FPS = 60                            # Taxa de atualização (frames por segundo)
+LARGURA_TELA_PADRAO = 1200  # Largura padrão da janela
+ALTURA_TELA_PADRAO = 800  # Altura padrão da janela
+FPS = 60  # Taxa de atualização (frames por segundo)
 
 # Cores utilizadas na interface
-VERDE_MESA = (0, 100, 0)            # Cor de fundo da mesa de jogo
-BRANCO = (255, 255, 255)            # Cor branca (texto, bordas)
-PRETO = (0, 0, 0)                   # Cor preta (contornos, texto)
-VERMELHO = (220, 20, 60)            # Cor vermelha (naipe copas/ouros)
-DESTAQUE_DICA = (255, 255, 100, 130)# Destaque amarelo translúcido para dicas
-HOVER_BOTAO = (0, 180, 0)           # Cor do botão ao passar o mouse
+VERDE_MESA = (0, 100, 0)  # Cor de fundo da mesa de jogo
+BRANCO = (255, 255, 255)  # Cor branca (texto, bordas)
+PRETO = (0, 0, 0)  # Cor preta (contornos, texto)
+VERMELHO = (220, 20, 60)  # Cor vermelha (naipe copas/ouros)
+DESTAQUE_DICA = (255, 255, 100, 130)  # Destaque amarelo translúcido para dicas
+HOVER_BOTAO = (0, 180, 0)  # Cor do botão ao passar o mouse
 
 # Dimensões das cartas
-LARGURA_CARTA = 80                  # Largura de cada carta
-ALTURA_CARTA = 116                  # Altura de cada carta
-SOBREPOSICAO = 30                   # Sobreposição vertical entre cartas no tableau
+LARGURA_CARTA = 80  # Largura de cada carta
+ALTURA_CARTA = 116  # Altura de cada carta
+SOBREPOSICAO = 30  # Sobreposição vertical entre cartas no tableau
 
 # Configurações do painel lateral esquerdo
-PAINEL_LARGURA = 180                # Largura do painel de controle
-PAINEL_X = 20                       # Posição X do painel
-PAINEL_Y = 20                       # Posição Y do painel
-PAINEL_COR = (0, 80, 0)             # Cor de fundo do painel
-PAINEL_BORDA = (200, 200, 200)      # Cor da borda do painel
+PAINEL_LARGURA = 180  # Largura do painel de controle
+PAINEL_X = 20  # Posição X do painel
+PAINEL_Y = 20  # Posição Y do painel
+PAINEL_COR = (0, 80, 0)  # Cor de fundo do painel
+PAINEL_BORDA = (200, 200, 200)  # Cor da borda do painel
 
 # Posição do título "PACIÊNCIA YUKON"
-TITULO_X = PAINEL_X + 20
 TITULO_Y = PAINEL_Y + 20
 
 # Configurações dos botões no painel
-BOTAO_X = PAINEL_X + 20             # Posição X dos botões
-BOTAO_Y = TITULO_Y + 70             # Posição Y inicial do primeiro botão
-BOTAO_LARGURA = 140                 # Largura dos botões
-BOTAO_ALTURA = 40                   # Altura dos botões
-ESPACO_BOTOES = 15                  # Espaço entre os botões
+BOTAO_X = PAINEL_X + 20  # Posição X dos botões
+BOTAO_Y = TITULO_Y + 70  # Posição Y inicial do primeiro botão
+BOTAO_LARGURA = 140  # Largura dos botões
+BOTAO_ALTURA = 40  # Altura dos botões
+ESPACO_BOTOES = 15  # Espaço entre os botões
 
-# Posições específicas de cada botão
+# Posições específicas de cada botão (Painel Esquerdo)
 BOTAO_DICA_X = BOTAO_X
 BOTAO_DICA_Y = BOTAO_Y
 BOTAO_NOVO_X = BOTAO_X
@@ -55,18 +54,28 @@ BOTAO_DESFAZER_X = BOTAO_X
 BOTAO_DESFAZER_Y = BOTAO_NOVO_Y + BOTAO_ALTURA + ESPACO_BOTOES
 
 # Configurações das fundações (pilhas de destino)
-FUNDAÇÃO_X = PAINEL_X + 50          # Posição X das fundações
-FUNDAÇÃO_Y_INICIAL = BOTAO_DESFAZER_Y + BOTAO_ALTURA + 50  # Y inicial da primeira fundação
-FUNDAÇÃO_ESPACO_VERTICAL = 120      # Espaço vertical entre as fundações
+FUNDAÇÃO_X = PAINEL_X + 50  # Posição X das fundações
+FUNDAÇÃO_Y_INICIAL = (
+    BOTAO_DESFAZER_Y + BOTAO_ALTURA + 50
+)  # Y inicial da primeira fundação
+FUNDAÇÃO_ESPACO_VERTICAL = 120  # Espaço vertical entre as fundações
 
 # Configurações do cronômetro (canto inferior direito)
 CRONOMETRO_LARGURA = 140
 CRONOMETRO_ALTURA = 50
 CRONOMETRO_MARGEM = 20
 
+# --- NOVO: Configurações do Botão de Pausa (Canto Inferior Direito) ---
+BOTAO_PAUSA_LARGURA = 100
+BOTAO_PAUSA_ALTURA = 50
+# Esta margem posiciona o botão PAUSA ao lado esquerdo do cronômetro.
+BOTAO_PAUSA_MARGEM_DIREITA = CRONOMETRO_LARGURA + 10
+# ----------------------------------------------------------------------
+
 # Configurações do tableau (7 colunas principais)
 TABLEAU_X_INICIAL = PAINEL_X + PAINEL_LARGURA + 20  # X inicial do tableau
-TABLEAU_Y = 20                      # Y inicial do tableau
+TABLEAU_Y = 20  # Y inicial do tableau
+
 
 # ===================================================================
 # CLASSE PRINCIPAL DA INTERFACE GRÁFICA
@@ -84,15 +93,21 @@ class InterfacePygame:
         self.tela_cheia = False
         self.largura_padrao = LARGURA_TELA_PADRAO
         self.altura_padrao = ALTURA_TELA_PADRAO
-        self.tela = pygame.display.set_mode((self.largura_padrao, self.altura_padrao), pygame.RESIZABLE)
+        self.tela = pygame.display.set_mode(
+            (self.largura_padrao, self.altura_padrao), pygame.RESIZABLE
+        )
 
         # Controle de FPS
         self.clock = pygame.time.Clock()
 
         # Fontes utilizadas no jogo
-        self.fonte = pygame.font.SysFont("Arial", 24, bold=True)        # Fonte principal
-        self.fonte_pequena = pygame.font.SysFont("Arial", 18)           # Fonte para botões e detalhes
-        self.fonte_vitoria = pygame.font.SysFont("Arial", 48, bold=True)# Fonte para mensagem de vitória
+        self.fonte = pygame.font.SysFont("Arial", 24, bold=True)  # Fonte principal
+        self.fonte_pequena = pygame.font.SysFont(
+            "Arial", 18
+        )  # Fonte para botões e detalhes
+        self.fonte_vitoria = pygame.font.SysFont(
+            "Arial", 48, bold=True
+        )  # Fonte para mensagem de vitória
 
         # Carrega imagens das cartas
         self.imagens_cartas = self.carregar_imagens()
@@ -128,6 +143,10 @@ class InterfacePygame:
         self.dica_ativa = False
         self.cartas_destacadas = []
 
+        # --- NOVO: Controle de Pausa ---
+        self.pausado = False  # Indica se o jogo está atualmente pausado
+        # -------------------------------
+
     def alternar_tela_cheia(self, forcar=None):
         """
         Alterna entre modo janela e tela cheia.
@@ -140,7 +159,9 @@ class InterfacePygame:
         if self.tela_cheia:
             self.tela = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
-            self.tela = pygame.display.set_mode((self.largura_padrao, self.altura_padrao), pygame.RESIZABLE)
+            self.tela = pygame.display.set_mode(
+                (self.largura_padrao, self.altura_padrao), pygame.RESIZABLE
+            )
 
     def carregar_imagens(self):
         """
@@ -148,7 +169,9 @@ class InterfacePygame:
         Usa fallback se imagens não existirem.
         """
         imagens = {}
-        raiz_projeto = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        raiz_projeto = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         pasta_cartas = os.path.join(raiz_projeto, "cartas")
         if not os.path.exists(pasta_cartas):
             return imagens
@@ -158,13 +181,33 @@ class InterfacePygame:
             verso_path = os.path.join(pasta_cartas, verso_nome)
             if os.path.exists(verso_path):
                 img = pygame.image.load(verso_path)
-                imagens["verso"] = pygame.transform.smoothscale(img, (LARGURA_CARTA, ALTURA_CARTA))
+                imagens["verso"] = pygame.transform.smoothscale(
+                    img, (LARGURA_CARTA, ALTURA_CARTA)
+                )
                 break
 
         # Mapeamento de naipes e valores
-        naipes_map = {"copas": "hearts", "ouros": "diamonds", "paus": "clubs", "espadas": "spades"}
-        valores_map = {1: "A", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7",
-                       8: "8", 9: "9", 10: "10", 11: "J", 12: "Q", 13: "K"}
+        naipes_map = {
+            "copas": "hearts",
+            "ouros": "diamonds",
+            "paus": "clubs",
+            "espadas": "spades",
+        }
+        valores_map = {
+            1: "A",
+            2: "2",
+            3: "3",
+            4: "4",
+            5: "5",
+            6: "6",
+            7: "7",
+            8: "8",
+            9: "9",
+            10: "10",
+            11: "J",
+            12: "Q",
+            13: "K",
+        }
 
         # Carrega cada carta individualmente
         for naipe_nome, prefixo in naipes_map.items():
@@ -174,7 +217,9 @@ class InterfacePygame:
                 if os.path.exists(caminho):
                     chave = f"{val_str} de {naipe_nome}"
                     img = pygame.image.load(caminho)
-                    imagens[chave] = pygame.transform.smoothscale(img, (LARGURA_CARTA, ALTURA_CARTA))
+                    imagens[chave] = pygame.transform.smoothscale(
+                        img, (LARGURA_CARTA, ALTURA_CARTA)
+                    )
 
         return imagens
 
@@ -228,10 +273,15 @@ class InterfacePygame:
         Desenha um botão com efeito hover.
         """
         cor_fundo = HOVER_BOTAO if hover else (0, 100, 0)
-        pygame.draw.rect(self.tela, cor_fundo, (x, y, largura, altura), border_radius=10)
-        pygame.draw.rect(self.tela, BRANCO, (x, y, largura, altura), 3, border_radius=10)
+        # Desenha o retângulo do botão com cantos arredondados
+        pygame.draw.rect(
+            self.tela, cor_fundo, (x, y, largura, altura), border_radius=10
+        )
+        pygame.draw.rect(
+            self.tela, BRANCO, (x, y, largura, altura), 3, border_radius=10
+        )
         txt = self.fonte_pequena.render(texto, True, BRANCO)
-        txt_rect = txt.get_rect(center=(x + largura//2, y + altura//2))
+        txt_rect = txt.get_rect(center=(x + largura // 2, y + altura // 2))
         self.tela.blit(txt, txt_rect)
 
     def desenhar_botao_dica(self):
@@ -239,19 +289,27 @@ class InterfacePygame:
         Desenha o botão "DICA" com destaque quando ativo.
         """
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        dentro = (BOTAO_DICA_X <= mouse_x <= BOTAO_DICA_X + BOTAO_LARGURA and
-                  BOTAO_DICA_Y <= mouse_y <= BOTAO_DICA_Y + BOTAO_ALTURA)
-        cor_texto = (255, 255, 0) if self.dica_ativa else BRANCO
-        self.desenhar_botao("DICA", BOTAO_DICA_X, BOTAO_DICA_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
+        dentro = (
+            BOTAO_DICA_X <= mouse_x <= BOTAO_DICA_X + BOTAO_LARGURA
+            and BOTAO_DICA_Y <= mouse_y <= BOTAO_DICA_Y + BOTAO_ALTURA
+        )
+        # A cor do texto não está sendo usada aqui, mas o hover está
+        self.desenhar_botao(
+            "DICA", BOTAO_DICA_X, BOTAO_DICA_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro
+        )
 
     def desenhar_botao_novo_jogo(self):
         """
         Desenha o botão "NOVO JOGO".
         """
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        dentro = (BOTAO_NOVO_X <= mouse_x <= BOTAO_NOVO_X + BOTAO_LARGURA and
-                  BOTAO_NOVO_Y <= mouse_y <= BOTAO_NOVO_Y + BOTAO_ALTURA)
-        self.desenhar_botao("NOVO JOGO", BOTAO_NOVO_X, BOTAO_NOVO_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
+        dentro = (
+            BOTAO_NOVO_X <= mouse_x <= BOTAO_NOVO_X + BOTAO_LARGURA
+            and BOTAO_NOVO_Y <= mouse_y <= BOTAO_NOVO_Y + BOTAO_ALTURA
+        )
+        self.desenhar_botao(
+            "NOVO JOGO", BOTAO_NOVO_X, BOTAO_NOVO_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro
+        )
 
     def desenhar_botao_desfazer(self):
         """
@@ -260,13 +318,22 @@ class InterfacePygame:
         if len(self.historico) <= 1:
             return
         mouse_x, mouse_y = pygame.mouse.get_pos()
-        dentro = (BOTAO_DESFAZER_X <= mouse_x <= BOTAO_DESFAZER_X + BOTAO_LARGURA and
-                  BOTAO_DESFAZER_Y <= mouse_y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA)
-        self.desenhar_botao("DESFAZER", BOTAO_DESFAZER_X, BOTAO_DESFAZER_Y, BOTAO_LARGURA, BOTAO_ALTURA, dentro)
+        dentro = (
+            BOTAO_DESFAZER_X <= mouse_x <= BOTAO_DESFAZER_X + BOTAO_LARGURA
+            and BOTAO_DESFAZER_Y <= mouse_y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA
+        )
+        self.desenhar_botao(
+            "DESFAZER",
+            BOTAO_DESFAZER_X,
+            BOTAO_DESFAZER_Y,
+            BOTAO_LARGURA,
+            BOTAO_ALTURA,
+            dentro,
+        )
 
     def desfazer_ultima_jogada(self):
         """
-        Restaura o estado anterior do jogo.
+        Restaura o estado anterior do jogo e desativa a dica.
         """
         if len(self.historico) > 1:
             self.historico.pop()
@@ -276,12 +343,26 @@ class InterfacePygame:
 
     def desenhar_titulo(self):
         """
-        Desenha o título "PACIÊNCIA YUKON" no painel.
+        Desenha o título "PACIÊNCIA YUKON" no painel, agora centralizado.
         """
+
+        # 1. O centro horizontal do painel é calculado com base em PAINEL_X e PAINEL_LARGURA
+        centro_x_painel = PAINEL_X + PAINEL_LARGURA // 2
+
+        # 2. Renderiza os textos
         pac = self.fonte.render("PACIÊNCIA", True, BRANCO)
         yuk = self.fonte.render("YUKON", True, BRANCO)
-        self.tela.blit(pac, (TITULO_X, TITULO_Y))
-        self.tela.blit(yuk, (TITULO_X, TITULO_Y + 30))
+
+        # 3. Obtém o retângulo do texto e o centraliza em X
+        # PACIÊNCIA: O centro X do retângulo (centerx) é definido pelo centro_x_painel.
+        pac_rect = pac.get_rect(centerx=centro_x_painel, y=TITULO_Y)
+
+        # YUKON: Também usa o centro X do painel.
+        yuk_rect = yuk.get_rect(centerx=centro_x_painel, y=TITULO_Y + 30)
+
+        # 4. Desenha na tela
+        self.tela.blit(pac, pac_rect)
+        self.tela.blit(yuk, yuk_rect)
 
     def desenhar_tableau(self):
         """
@@ -296,8 +377,12 @@ class InterfacePygame:
             x = TABLEAU_X_INICIAL + col_idx * espaco_horizontal
             for i, carta in enumerate(pilha.cartas):
                 y = TABLEAU_Y + i * SOBREPOSICAO
-                destaque_arrasto = (self.arrastando and self.origem_coluna == col_idx and
-                                  self.origem_tipo == "tableau" and i >= self.origem_indice)
+                destaque_arrasto = (
+                    self.arrastando
+                    and self.origem_coluna == col_idx
+                    and self.origem_tipo == "tableau"
+                    and i >= self.origem_indice
+                )
                 destaque_dica = False
 
                 if self.dica_ativa:
@@ -306,7 +391,11 @@ class InterfacePygame:
                             destaque_dica = True
                             break
 
-                self.desenhar_carta(carta, x, y, carta.face_up, destaque_dica or destaque_arrasto)
+                # Se o jogo estiver pausado, desativa o destaque de arrasto, mas mantém a dica visual se ativa
+                destaque_final = destaque_dica or (
+                    destaque_arrasto and not self.pausado
+                )
+                self.desenhar_carta(carta, x, y, carta.face_up, destaque_final)
 
     def desenhar_fundacoes_vertical(self):
         """
@@ -323,18 +412,20 @@ class InterfacePygame:
                 # Fonte pequena para caber
                 fonte = pygame.font.SysFont("Segoe UI Symbol", 16)
                 cor = (200, 200, 200)
-                
+
                 # Linha superior: ♠ ♥
                 linha1 = fonte.render("♠  ♥", True, cor)
                 linha1_rect = linha1.get_rect(centerx=rect.centerx, y=y + 30)
                 self.tela.blit(linha1, linha1_rect)
-                
+
                 # Linha inferior: ♦ ♣
                 linha2 = fonte.render("♦  ♣", True, cor)
                 linha2_rect = linha2.get_rect(centerx=rect.centerx, y=y + 55)
                 self.tela.blit(linha2, linha2_rect)
             else:
-                destaque = self.dica_ativa and any(o == -1 and inc == i for o, inc, _ in self.cartas_destacadas)
+                destaque = self.dica_ativa and any(
+                    o == -1 and inc == i for o, inc, _ in self.cartas_destacadas
+                )
                 self.desenhar_carta(fund.peek(), x, y, True, destaque)
 
     def coordenadas_para_coluna(self, x, y):
@@ -368,7 +459,11 @@ class InterfacePygame:
                 y_inicial = TABLEAU_Y
                 for idx, carta in enumerate(pilha.cartas):
                     y_topo = y_inicial + idx * SOBREPOSICAO
-                    y_limite = y_topo + ALTURA_CARTA if idx == len(pilha.cartas) - 1 else y_inicial + (idx + 1) * SOBREPOSICAO
+                    y_limite = (
+                        y_topo + ALTURA_CARTA
+                        if idx == len(pilha.cartas) - 1
+                        else y_inicial + (idx + 1) * SOBREPOSICAO
+                    )
                     if y_topo <= my < y_limite and carta.face_up:
                         return col_idx, idx
         return None
@@ -393,8 +488,10 @@ class InterfacePygame:
                 for i in range(inicio + 1, len(pilha.cartas)):
                     proxima = pilha.cartas[i]
                     anterior = subpilha[-1]
-                    if (proxima.valor == anterior.valor - 1 and
-                        proxima.is_vermelho() != anterior.is_vermelho()):
+                    if (
+                        proxima.valor == anterior.valor - 1
+                        and proxima.is_vermelho() != anterior.is_vermelho()
+                    ):
                         subpilha.append(proxima)
                     else:
                         break
@@ -404,7 +501,9 @@ class InterfacePygame:
                         if origem == destino:
                             continue
                         if self.jogo.tableau[destino].pode_adicionar_subpilha(subpilha):
-                            self.cartas_destacadas.append((origem, inicio, len(subpilha)))
+                            self.cartas_destacadas.append(
+                                (origem, inicio, len(subpilha))
+                            )
                             break
 
         # TABLEAU → FUNDAÇÃO
@@ -414,7 +513,7 @@ class InterfacePygame:
                 carta = pilha.cartas[-1]
                 for fund_idx in range(4):
                     if self.jogo.pode_mover_para_fundacao(carta, fund_idx):
-                        self.cartas_destacadas.append((col, len(pilha.cartas)-1, 1))
+                        self.cartas_destacadas.append((col, len(pilha.cartas) - 1, 1))
                         break
 
         # FUNDAÇÃO → TABLEAU
@@ -428,10 +527,43 @@ class InterfacePygame:
                     self.cartas_destacadas.append((-1, fund_idx, 1))
                     break
 
+    def desenhar_botao_pausa(self):
+        """
+        Desenha o botão de Pausa/Continuar ao lado do cronômetro.
+        """
+        largura, altura = self.tela.get_size()
+
+        # Calcula a posição X e Y do botão de pausa no canto inferior direito
+        pausa_x = (
+            largura
+            - BOTAO_PAUSA_MARGEM_DIREITA
+            - BOTAO_PAUSA_LARGURA
+            - CRONOMETRO_MARGEM
+        )
+        pausa_y = altura - BOTAO_PAUSA_ALTURA - CRONOMETRO_MARGEM
+
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        dentro = (
+            pausa_x <= mouse_x <= pausa_x + BOTAO_PAUSA_LARGURA
+            and pausa_y <= mouse_y <= pausa_y + BOTAO_PAUSA_ALTURA
+        )
+
+        texto_botao = "PAUSAR" if not self.pausado else "CONTINUAR"
+
+        # Desenha o botão usando o método existente
+        self.desenhar_botao(
+            texto_botao,
+            pausa_x,
+            pausa_y,
+            BOTAO_PAUSA_LARGURA,
+            BOTAO_PAUSA_ALTURA,
+            dentro,
+        )
+
+        # Retorna o retângulo para uso na detecção de cliques
+        return pygame.Rect(pausa_x, pausa_y, BOTAO_PAUSA_LARGURA, BOTAO_PAUSA_ALTURA)
+
     def tratar_eventos(self):
-        """
-        Processa todos os eventos do Pygame (mouse, teclado, janela).
-        """
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
@@ -442,49 +574,70 @@ class InterfacePygame:
                     self.alternar_tela_cheia()
                 elif evento.key == pygame.K_ESCAPE and self.tela_cheia:
                     self.alternar_tela_cheia(False)
+                elif evento.key == pygame.K_ESCAPE:
+                    self.alternar_pausa()
+                    continue
 
             elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 x, y = evento.pos
                 agora = pygame.time.get_ticks()
 
-                # Botão DICA
-                if (BOTAO_DICA_X <= x <= BOTAO_DICA_X + BOTAO_LARGURA and
-                    BOTAO_DICA_Y <= y <= BOTAO_DICA_Y + BOTAO_ALTURA):
-                    self.dica_ativa = not self.dica_ativa
-                    if self.dica_ativa:
-                        self.calcular_dicas_completas()
-                    else:
-                        self.cartas_destacadas = []
+                # TRATAMENTO DO BOTÃO PAUSA
+                pausa_rect = self.desenhar_botao_pausa()
+                if pausa_rect.collidepoint(x, y):
+                    self.alternar_pausa()
+                    continue
+
+                # --- BLOQUEIO CRÍTICO ---
+                if self.pausado:
+                    return
+                # ------------------------
+
+                # Botão DICA (agora bloqueado pelo if self.pausado)
+                if (
+                    BOTAO_DICA_X <= x <= BOTAO_DICA_X + BOTAO_LARGURA
+                    and BOTAO_DICA_Y <= y <= BOTAO_DICA_Y + BOTAO_ALTURA
+                ):
+                    self.alternar_dica()
                     continue
 
                 # Botão NOVO JOGO
-                if (BOTAO_NOVO_X <= x <= BOTAO_NOVO_X + BOTAO_LARGURA and
-                    BOTAO_NOVO_Y <= y <= BOTAO_NOVO_Y + BOTAO_ALTURA):
-                    self.jogo = JogoYukon()
-                    self.historico = [self.jogo.salvar_estado()]
-                    self.dica_ativa = False
-                    self.cartas_destacadas = []
-                    self.primeiro_clique_feito = False
-                    self.cronometro_ativo = False
-                    self.tempo_total_ms = 0
+                if (
+                    BOTAO_NOVO_X <= x <= BOTAO_NOVO_X + BOTAO_LARGURA
+                    and BOTAO_NOVO_Y <= y <= BOTAO_NOVO_Y + BOTAO_ALTURA
+                ):
+                    self.iniciar_novo_jogo()
                     continue
 
                 # Botão DESFAZER
-                if (len(self.historico) > 1 and
-                    BOTAO_DESFAZER_X <= x <= BOTAO_DESFAZER_X + BOTAO_LARGURA and
-                    BOTAO_DESFAZER_Y <= y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA and
-                    agora - self.ultimo_desfazer > self.DEBOUNCE_TEMPO):
+                if (
+                    len(self.historico) > 1
+                    and BOTAO_DESFAZER_X <= x <= BOTAO_DESFAZER_X + BOTAO_LARGURA
+                    and BOTAO_DESFAZER_Y <= y <= BOTAO_DESFAZER_Y + BOTAO_ALTURA
+                    and agora - self.ultimo_desfazer > self.DEBOUNCE_TEMPO
+                ):
                     self.desfazer_ultima_jogada()
                     self.ultimo_desfazer = agora
+                    continue
+
+                # Desativar dica
+                tipo_clique, _ = self.coordenadas_para_coluna(x, y)
+                if self.dica_ativa and (
+                    tipo_clique == "tableau" or tipo_clique == "fundacao"
+                ):
+                    self.dica_ativa = False
+                    self.cartas_destacadas = []
                     continue
 
                 # Duplo clique
                 tempo_desde_ultimo = agora - self.ultimo_clique_tempo
                 dist_x = abs(x - self.ultimo_clique_pos[0])
                 dist_y = abs(y - self.ultimo_clique_pos[1])
-                if (tempo_desde_ultimo < self.DUPLO_CLIQUE_TEMPO and
-                    dist_x < self.DUPLO_CLIQUE_DISTANCIA and
-                    dist_y < self.DUPLO_CLIQUE_DISTANCIA):
+                if (
+                    tempo_desde_ultimo < self.DUPLO_CLIQUE_TEMPO
+                    and dist_x < self.DUPLO_CLIQUE_DISTANCIA
+                    and dist_y < self.DUPLO_CLIQUE_DISTANCIA
+                ):
                     self.tentar_mover_duplo_clique(x, y)
                     self.ultimo_clique_tempo = 0
                     continue
@@ -503,8 +656,10 @@ class InterfacePygame:
                     for i in range(idx + 1, len(pilha.cartas)):
                         proxima = pilha.cartas[i]
                         anterior = subpilha[-1]
-                        if (proxima.valor == anterior.valor - 1 and
-                            proxima.is_vermelho() != anterior.is_vermelho()):
+                        if (
+                            proxima.valor == anterior.valor - 1
+                            and proxima.is_vermelho() != anterior.is_vermelho()
+                        ):
                             subpilha.append(proxima)
                         else:
                             break
@@ -536,28 +691,85 @@ class InterfacePygame:
 
             elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
                 # Fim do arrasto
+                if self.pausado:
+                    self.arrastando = False
+                    return
+
                 if self.arrastando:
                     x, y = evento.pos
                     tipo_destino, idx_destino = self.coordenadas_para_coluna(x, y)
                     movimento_valido = False
-                    if (tipo_destino == "tableau" and self.origem_tipo == "tableau" and idx_destino != self.origem_coluna):
-                        if self.jogo.mover_subpilha(self.origem_coluna, self.origem_indice, idx_destino):
+                    if (
+                        tipo_destino == "tableau"
+                        and self.origem_tipo == "tableau"
+                        and idx_destino != self.origem_coluna
+                    ):
+                        if self.jogo.mover_subpilha(
+                            self.origem_coluna, self.origem_indice, idx_destino
+                        ):
                             movimento_valido = True
-                    elif (tipo_destino == "fundacao" and self.origem_tipo == "tableau" and len(self.subpilha_arrastada) == 1):
-                        if self.jogo.mover_para_fundacao(self.origem_coluna, idx_destino):
+                    elif (
+                        tipo_destino == "fundacao"
+                        and self.origem_tipo == "tableau"
+                        and len(self.subpilha_arrastada) == 1
+                    ):
+                        if self.jogo.mover_para_fundacao(
+                            self.origem_coluna, idx_destino
+                        ):
                             movimento_valido = True
-                    elif (tipo_destino == "tableau" and self.origem_tipo == "fundacao"):
+                    elif tipo_destino == "tableau" and self.origem_tipo == "fundacao":
                         if self.jogo.mover_da_fundacao(self.origem_coluna, idx_destino):
                             movimento_valido = True
                     if movimento_valido:
                         self.historico.append(self.jogo.salvar_estado())
                         if self.dica_ativa:
-                            self.calcular_dicas_completas()
+                            self.dica_ativa = False
+                            self.cartas_destacadas = []
                     self.arrastando = False
                     self.subpilha_arrastada = []
                     self.origem_coluna = None
                     self.origem_indice = None
                     self.origem_tipo = None
+
+    def alternar_dica(self):
+        """Alterna o estado da dica e recalcula/limpa os destaques."""
+        self.dica_ativa = not self.dica_ativa
+        if self.dica_ativa:
+            self.calcular_dicas_completas()
+        else:
+            self.cartas_destacadas = []
+
+    def iniciar_novo_jogo(self):
+        """Reseta o jogo para o estado inicial."""
+        self.jogo = JogoYukon()
+        self.historico = [self.jogo.salvar_estado()]
+        self.dica_ativa = False
+        self.cartas_destacadas = []
+        self.primeiro_clique_feito = False
+        self.cronometro_ativo = False
+        self.tempo_total_ms = 0
+        self.pausado = False  # Garante que não esteja pausado ao iniciar um novo jogo
+
+    def alternar_pausa(self):
+        """
+        Alterna o estado de pausa e gerencia o cronômetro.
+        """
+        self.pausado = not self.pausado
+
+        if self.pausado:
+            # Se pausou, interrompe o cronômetro e salva o tempo decorrido
+            if self.cronometro_ativo and self.tempo_inicio is not None:
+                self.tempo_total_ms += pygame.time.get_ticks() - self.tempo_inicio
+                self.cronometro_ativo = False
+        else:
+            # Se despausou, continua o cronômetro
+            if self.primeiro_clique_feito:
+                self.tempo_inicio = pygame.time.get_ticks()
+                self.cronometro_ativo = True
+
+        # Garante que a dica seja desativada ao pausar/despausar para evitar inconsistências
+        self.dica_ativa = False
+        self.cartas_destacadas = []
 
     def iniciar_cronometro(self):
         """
@@ -572,6 +784,10 @@ class InterfacePygame:
         """
         Tenta mover automaticamente a carta do topo para uma fundação ao dar duplo clique.
         """
+        # Se pausado, não permite duplo clique (mas o bloco em tratar_eventos já bloqueia)
+        if self.pausado:
+            return
+
         resultado = self.encontrar_subpilha_clicada(mx, my)
         if resultado is None:
             return
@@ -586,8 +802,12 @@ class InterfacePygame:
             if self.jogo.pode_mover_para_fundacao(carta, fund_idx):
                 if self.jogo.mover_para_fundacao(col, fund_idx):
                     self.historico.append(self.jogo.salvar_estado())
+
+                    # Se houve um movimento, desativa a dica (MELHORIA ANTERIOR)
                     if self.dica_ativa:
-                        self.calcular_dicas_completas()
+                        self.dica_ativa = False
+                        self.cartas_destacadas = []
+
                     return
 
     def formatar_tempo(self, ms):
@@ -607,17 +827,53 @@ class InterfacePygame:
         y = altura - CRONOMETRO_ALTURA - CRONOMETRO_MARGEM
 
         tempo_atual = self.tempo_total_ms
+
+        # Só atualiza o tempo se o cronômetro estiver ativo (não pausado e não vitorioso)
         if self.cronometro_ativo and self.tempo_inicio is not None:
-            tempo_atual += (pygame.time.get_ticks() - self.tempo_inicio)
+            tempo_atual += pygame.time.get_ticks() - self.tempo_inicio
 
         texto = self.fonte.render(self.formatar_tempo(tempo_atual), True, BRANCO)
-        texto_rect = texto.get_rect(center=(x + CRONOMETRO_LARGURA // 2, y + CRONOMETRO_ALTURA // 2))
+        texto_rect = texto.get_rect(
+            center=(x + CRONOMETRO_LARGURA // 2, y + CRONOMETRO_ALTURA // 2)
+        )
 
         fundo = pygame.Surface((CRONOMETRO_LARGURA, CRONOMETRO_ALTURA), pygame.SRCALPHA)
         fundo.fill((0, 80, 0, 240))
         self.tela.blit(fundo, (x, y))
-        pygame.draw.rect(self.tela, BRANCO, (x, y, CRONOMETRO_LARGURA, CRONOMETRO_ALTURA), 3, border_radius=10)
+        pygame.draw.rect(
+            self.tela,
+            BRANCO,
+            (x, y, CRONOMETRO_LARGURA, CRONOMETRO_ALTURA),
+            3,
+            border_radius=10,
+        )
         self.tela.blit(texto, texto_rect)
+
+    def desenhar_mensagem_pausa(self):
+        """
+        Exibe a mensagem de 'JOGO PAUSADO' no centro da tela com fundo translúcido.
+        """
+        # Só exibe se estiver pausado e o jogo não tiver terminado
+        if self.pausado and not self.jogo.verificar_vitoria():
+            mensagem = self.fonte_vitoria.render("JOGO PAUSADO", True, (255, 255, 255))
+
+            largura_tela, altura_tela = self.tela.get_size()
+
+            # Configurações do fundo da mensagem
+            fundo_largura, fundo_altura = 400, 100
+            fundo = pygame.Surface((fundo_largura, fundo_altura), pygame.SRCALPHA)
+            fundo.fill((0, 0, 0, 180))  # Preto, 180 de transparência
+
+            # Posição centralizada
+            fundo_x = largura_tela // 2 - fundo_largura // 2
+            fundo_y = altura_tela // 2 - fundo_altura // 2
+
+            # Desenha o fundo e a mensagem
+            self.tela.blit(fundo, (fundo_x, fundo_y))
+
+            texto_x = largura_tela // 2 - mensagem.get_width() // 2
+            texto_y = altura_tela // 2 - mensagem.get_height() // 2
+            self.tela.blit(mensagem, (texto_x, texto_y))
 
     def rodar(self):
         """
@@ -628,13 +884,20 @@ class InterfacePygame:
             self.tratar_eventos()
 
             largura_atual, altura_atual = self.tela.get_size()
-            if not self.tela_cheia and (largura_atual != self.largura_padrao or altura_atual != self.altura_padrao):
+            if not self.tela_cheia and (
+                largura_atual != self.largura_padrao
+                or altura_atual != self.altura_padrao
+            ):
                 self.largura_padrao = largura_atual
                 self.altura_padrao = altura_atual
 
+            # Se o jogo foi vencido, congela o cronômetro
             if self.jogo.verificar_vitoria() and self.cronometro_ativo:
                 self.tempo_total_ms += pygame.time.get_ticks() - self.tempo_inicio
                 self.cronometro_ativo = False
+                self.pausado = (
+                    False  # Garante que a mensagem de pausa não sobreponha a de vitória
+                )
 
             self.desenhar_fundo()
             self.desenhar_titulo()
@@ -643,10 +906,20 @@ class InterfacePygame:
             self.desenhar_botao_desfazer()
             self.desenhar_fundacoes_vertical()
             self.desenhar_tableau()
+
+            # --- NOVO: Desenho do Botão de Pausa e Cronômetro ---
+            self.desenhar_botao_pausa()
             self.desenhar_cronometro()
+            # ----------------------------------------------------
+
             self.desenhar_vitoria()
 
-            if self.arrastando:
+            # --- NOVO: Desenho da Mensagem de Pausa ---
+            self.desenhar_mensagem_pausa()
+            # ------------------------------------------
+
+            # A subpilha arrastada só deve ser desenhada se não estiver pausado
+            if self.arrastando and not self.pausado:
                 mx, my = pygame.mouse.get_pos()
                 self.desenhar_subpilha_arrastada(mx, my)
 
@@ -662,6 +935,7 @@ class InterfacePygame:
         x = mouse_x - self.offset_x
         y = mouse_y - self.offset_y
         for i, carta in enumerate(self.subpilha_arrastada):
+            # O destaque de arrasto é tratado em desenhar_tableau, aqui usamos o True genérico
             self.desenhar_carta(carta, x, y + i * SOBREPOSICAO, True, True)
 
     def desenhar_vitoria(self):
@@ -673,8 +947,8 @@ class InterfacePygame:
             fundo = pygame.Surface((400, 100), pygame.SRCALPHA)
             fundo.fill((0, 0, 0, 180))
             largura_tela, altura_tela = self.tela.get_size()
-            self.tela.blit(fundo, (largura_tela//2 - 200, altura_tela//2 - 50))
-            self.tela.blit(vitoria, (largura_tela//2 - 120, altura_tela//2 - 40))
+            self.tela.blit(fundo, (largura_tela // 2 - 200, altura_tela // 2 - 50))
+            self.tela.blit(vitoria, (largura_tela // 2 - 120, altura_tela // 2 - 40))
 
     def desenhar_fallback(self, carta, x, y):
         """
@@ -692,6 +966,7 @@ class InterfacePygame:
         """
         pygame.draw.rect(self.tela, (0, 0, 100), (x, y, LARGURA_CARTA, ALTURA_CARTA))
         pygame.draw.rect(self.tela, PRETO, (x, y, LARGURA_CARTA, ALTURA_CARTA), 2)
+
 
 # ===================================================================
 if __name__ == "__main__":
