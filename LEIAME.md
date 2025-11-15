@@ -9,7 +9,7 @@
 ## Visão Geral
 
 Jogo de **Paciência Yukon** desenvolvido em **Python** com a biblioteca **Pygame**.  
-Implementa a lógica completa do jogo, interface gráfica responsiva, sistema de dicas, desfazer jogada, cronômetro, tela cheia e atalho na área de trabalho.
+Implementa a lógica completa do jogo, interface gráfica responsiva, sistema de dicas, desfazer jogada, cronômetro, pausar, tela cheia e atalho na área de trabalho.
 
 ================================================================================
 
@@ -60,6 +60,7 @@ Responsável pela interface gráfica.
   - Painel lateral com botões **DICA**, **NOVO JOGO** e **DESFAZER**.
   - Fundações verticais exibindo **4 naipes em formato 2×2** quando vazias.
   - **Cronômetro** no canto inferior direito (inicia no primeiro clique).
+  - **Pausar** ao lado do cronômetro (para o cronômetro e trava o jogo)
   - Sistema de **dica** que destaca jogadas válidas.
   - **Desfazer** com histórico completo.
   - **Duplo clique** move carta automaticamente para a fundação.
